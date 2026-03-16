@@ -135,7 +135,7 @@ All configuration is managed through environment variables defined in `.env.exam
 | `HTTPS_PORT` | HTTPS server port | `3443` |
 | `TLS_CERT_PATH` | Path to TLS certificate file (PEM format). Leave empty to disable HTTPS. | *(empty)* |
 | `TLS_KEY_PATH` | Path to TLS private key file (PEM format). Leave empty to disable HTTPS. | *(empty)* |
-| `CORS_ORIGIN` | Comma-separated list of allowed origins for CORS | `http://localhost:3000` |
+| `CORS_ORIGIN` | Comma-separated list of allowed origins for CORS. When unset, no origins are allowed (CORS disabled). See `.env.example` for a suggested development value of `http://localhost:3000`. | *(empty — CORS disabled)* |
 | `RATE_LIMIT_WINDOW_MS` | Rate limit window duration in milliseconds | `900000` (15 min) |
 | `RATE_LIMIT_MAX` | Maximum requests per IP per rate limit window | `100` |
 
@@ -167,7 +167,7 @@ Cross-Origin-Opener-Policy: same-origin
 Cross-Origin-Resource-Policy: same-origin
 Origin-Agent-Cluster: ?1
 Referrer-Policy: no-referrer
-Strict-Transport-Security: max-age=15552000; includeSubDomains
+Strict-Transport-Security: max-age=31536000; includeSubDomains
 X-Content-Type-Options: nosniff
 X-DNS-Prefetch-Control: off
 X-Download-Options: noopen
@@ -275,6 +275,8 @@ Expected output: `0 vulnerabilities`.
 ├── certs/
 │   └── generate-cert.sh              # Self-signed TLS certificate generation script
 └── tests/
+    ├── helpers/
+    │   └── request.js                 # Shared HTTP request helper for test suites
     ├── security/
     │   └── security.test.js           # Security header, rate limiting, CORS, validation tests
     └── integration/
