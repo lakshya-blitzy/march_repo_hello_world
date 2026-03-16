@@ -17,8 +17,8 @@ const http = require('http');
 
 /**
  * @const {string} hostname
- * @description The hostname on which the HTTP server will listen. Set to the IPv4
- * loopback address, restricting access to the local machine only.
+ * @description The hostname on which the HTTP server will listen. Set to the
+ * loopback interface address, restricting access to the local machine only.
  * @default '127.0.0.1'
  */
 const hostname = '127.0.0.1';
@@ -52,7 +52,7 @@ const server = http.createServer((req, res) => {
 /**
  * @description Starts the HTTP server, binding it to the specified hostname and port.
  * Once the server is successfully bound and ready to accept connections, the startup
- * callback logs the server URL to standard output.
+ * logger callback logs the server URL to standard output.
  */
 server.listen(port, hostname, () => {
   // Log the server URL to standard output once the server is ready

@@ -135,7 +135,7 @@ sequenceDiagram
 
 ## Code Walkthrough
 
-The entire application is contained in `server.js` (14 lines). Below is a walkthrough of each logical block.
+The entire application is contained in `server.js` (14 lines of executable code). Below is a walkthrough of each logical block.
 
 ### 1. Module Import
 
