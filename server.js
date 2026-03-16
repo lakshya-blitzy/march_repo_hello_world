@@ -1,6 +1,6 @@
 /**
  * @module march_repo_hello_world
- * @description A minimal Node.js HTTP server that listens on a configurable hostname
+ * @description A minimal Node.js HTTP server that listens on a specified hostname
  * and port, responding to every incoming request with a plain-text 'Hello, World!'
  * message. This module serves as the application entry point and does not export any values.
  * @requires http
@@ -34,8 +34,8 @@ const port = 3000;
 /**
  * @description Creates an HTTP server instance with an inline request handler callback.
  * The request handler responds to every incoming HTTP request with a 200 OK status,
- * a Content-Type of text/plain, and the body 'Hello, World!\n'. The handler does not
- * differentiate between HTTP methods, URL paths, or request headers.
+ * a Content-Type of text/plain, and the body 'Hello, World!\n', without differentiating
+ * between HTTP methods, URL paths, or request headers.
  * @type {http.Server}
  * @param {http.IncomingMessage} req - The incoming HTTP request object.
  * @param {http.ServerResponse} res - The HTTP server response object used to send data back to the client.
