@@ -8,7 +8,7 @@ This project implements a simple HTTP server using the Flask web framework with 
 
 **Key Features:**
 - **Minimal dependencies**: Uses only Flask web framework
-- **Minimal implementation**: Single file application under 20 lines of code
+- **Minimal implementation**: Single file application under 20 lines of functional code
 - **Simple API**: Single endpoint responding with "Hello, World!"
 - **Production-ready foundation**: Can be extended for real-world applications
 
@@ -31,12 +31,7 @@ git clone <repository-url>
 cd hao-backprop-test
 ```
 
-2. Navigate to the project directory:
-```bash
-cd hao-backprop-test
-```
-
-3. Set up a Python virtual environment and install dependencies:
+2. Set up a Python virtual environment and install dependencies:
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
@@ -364,12 +359,12 @@ Set production environment variables:
 
 ```bash
 # Using systemd
-Environment="FLASK_ENV=production"
+Environment="FLASK_DEBUG=0"
 Environment="PORT=3000"
 Environment="HOST=127.0.0.1"
 
 # Using Gunicorn with environment variables
-FLASK_ENV=production HOST=127.0.0.1 PORT=3000 gunicorn -w 4 -b 127.0.0.1:3000 app:app
+FLASK_DEBUG=0 HOST=127.0.0.1 PORT=3000 gunicorn -w 4 -b 127.0.0.1:3000 app:app
 ```
 
 ## Troubleshooting
@@ -544,4 +539,4 @@ This project was created as a test project for backprop integration, demonstrati
 
 **Project Version**: 1.0.0  
 **Python Compatibility**: >= 3.9  
-**Last Updated**: 2025
+**Last Updated**: 2026
