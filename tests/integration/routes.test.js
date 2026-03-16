@@ -21,8 +21,7 @@
 // ---------------------------------------------------------------------------
 // External Imports — Node.js built-in modules
 // ---------------------------------------------------------------------------
-var assert = require('assert');
-var http = require('http');
+const assert = require('assert');
 
 // ---------------------------------------------------------------------------
 // Test Environment Configuration
@@ -43,14 +42,14 @@ process.env.NODE_ENV = 'production';
 // server.js exports { app, httpServer } — we use both:
 //   - app:        Express application instance for creating temporary test servers
 //   - httpServer: The main server started by server.js (must be closed for cleanup)
-var serverModule = require('../../server');
-var app = serverModule.app;
-var httpServer = serverModule.httpServer;
+const { app, httpServer } = require('../../server');
 
 // Validator module — imported directly to verify handleValidationErrors exists
 // and is a callable middleware function with the correct arity.
-var validatorModule = require('../../src/middleware/validator');
-var handleValidationErrors = validatorModule.handleValidationErrors;
+const { handleValidationErrors } = require('../../src/middleware/validator');
+
+// Shared test helper for making HTTP requests against the Express app
+const { makeRequest } = require('../helpers/request');
 
 // Suppress EADDRINUSE or other listen errors from the main httpServer
 // started by server.js. Tests create their own temporary servers on port 0
@@ -58,75 +57,6 @@ var handleValidationErrors = validatorModule.handleValidationErrors;
 if (httpServer && typeof httpServer.on === 'function') {
   httpServer.on('error', function () {
     // Silently ignore — tests use independent temporary servers
-  });
-}
-
-// ---------------------------------------------------------------------------
-// Test Utility — HTTP Request Helper
-// ---------------------------------------------------------------------------
-
-/**
- * Creates a temporary HTTP server from the Express app, issues an HTTP
- * request to the specified path, collects the full response (status code,
- * headers, body), then shuts down the temporary server.
- *
- * Uses port 0 so the OS assigns a random available port, preventing
- * conflicts with other services or concurrent test runs.
- *
- * @param {Function} expressApp - Express application instance
- * @param {string}   path       - Request path (e.g., '/', '/health')
- * @param {Object}   [options]  - Optional request configuration
- * @param {string}   [options.method='GET'] - HTTP method
- * @param {Object}   [options.headers={}]   - Request headers
- * @param {string}   [options.body]         - Request body string
- * @returns {Promise<{statusCode: number, headers: Object, body: string}>}
- */
-function makeRequest(expressApp, path, options) {
-  var opts = options || {};
-
-  return new Promise(function (resolve, reject) {
-    var server = http.createServer(expressApp);
-
-    server.listen(0, function () {
-      var port = server.address().port;
-
-      var reqOptions = {
-        hostname: 'localhost',
-        port: port,
-        path: path,
-        method: opts.method || 'GET',
-        headers: opts.headers || {},
-      };
-
-      var req = http.request(reqOptions, function (res) {
-        var body = '';
-        res.on('data', function (chunk) {
-          body += chunk;
-        });
-        res.on('end', function () {
-          server.close();
-          resolve({
-            statusCode: res.statusCode,
-            headers: res.headers,
-            body: body,
-          });
-        });
-      });
-
-      req.on('error', function (err) {
-        server.close();
-        reject(err);
-      });
-
-      if (opts.body) {
-        req.write(opts.body);
-      }
-      req.end();
-    });
-
-    server.on('error', function (err) {
-      reject(err);
-    });
   });
 }
 
@@ -148,8 +78,8 @@ function makeRequest(expressApp, path, options) {
  * @returns {Promise<void>}
  */
 async function runTests() {
-  var passed = 0;
-  var failed = 0;
+  let passed = 0;
+  let failed = 0;
 
   /**
    * Wraps an async test function with try/catch for clean reporting.
@@ -185,7 +115,7 @@ async function runTests() {
   //              'Hello, World!\n' — core functionality preserved"
   // -----------------------------------------------------------------------
   await test('GET / should return 200 with Hello, World!', async function () {
-    var res = await makeRequest(app, '/');
+    const res = await makeRequest(app, '/');
     assert.strictEqual(res.statusCode, 200, 'Expected status code 200');
     assert.strictEqual(
       res.body,
@@ -206,7 +136,7 @@ async function runTests() {
   // with status "ok" and a valid ISO 8601 timestamp.
   // -----------------------------------------------------------------------
   await test('GET /health should return 200 with JSON health status', async function () {
-    var res = await makeRequest(app, '/health');
+    const res = await makeRequest(app, '/health');
     assert.strictEqual(res.statusCode, 200, 'Expected status code 200');
     assert.ok(
       res.headers['content-type'] &&
@@ -214,12 +144,12 @@ async function runTests() {
       'Expected Content-Type to include application/json'
     );
 
-    var body = JSON.parse(res.body);
+    const body = JSON.parse(res.body);
     assert.strictEqual(body.status, 'ok', 'Expected body.status to be "ok"');
     assert.ok(body.timestamp, 'Expected body.timestamp to exist');
 
     // Validate ISO 8601 timestamp format
-    var parsedDate = new Date(body.timestamp);
+    const parsedDate = new Date(body.timestamp);
     assert.ok(
       !isNaN(parsedDate.getTime()),
       'Expected timestamp to be a valid date'
@@ -242,7 +172,7 @@ async function runTests() {
   //              (previously returned 'Hello, World!' for all paths)"
   // -----------------------------------------------------------------------
   await test('GET /nonexistent should return 404 Not Found', async function () {
-    var res = await makeRequest(app, '/nonexistent');
+    const res = await makeRequest(app, '/nonexistent');
     assert.strictEqual(res.statusCode, 404, 'Expected status code 404');
     assert.ok(
       res.headers['content-type'] &&
@@ -250,7 +180,7 @@ async function runTests() {
       'Expected Content-Type to include application/json'
     );
 
-    var body = JSON.parse(res.body);
+    const body = JSON.parse(res.body);
     assert.ok(body.error, 'Expected response to have error property');
     assert.strictEqual(
       body.error.status,
@@ -279,10 +209,10 @@ async function runTests() {
   //       stack traces are absent in production.
   // -----------------------------------------------------------------------
   await test('Error responses should follow { error: { status, message } } format', async function () {
-    var res = await makeRequest(app, '/does-not-exist');
+    const res = await makeRequest(app, '/does-not-exist');
     assert.strictEqual(res.statusCode, 404, 'Expected status code 404');
 
-    var body = JSON.parse(res.body);
+    const body = JSON.parse(res.body);
 
     // Validate top-level structure
     assert.ok(body.error, 'Response must have an "error" property');

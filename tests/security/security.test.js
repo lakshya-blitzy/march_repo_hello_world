@@ -34,51 +34,21 @@ process.env.CORS_ORIGIN = 'http://localhost:3000';
 // ---------------------------------------------------------------------------
 const assert = require('assert');
 const http = require('http');
-const { app } = require('../../server');
+const { app, httpServer } = require('../../server');
 const { handleValidationErrors } = require('../../src/middleware/validator');
 const config = require('../../src/config/index');
+const { makeRequest } = require('../helpers/request');
 
 // ---------------------------------------------------------------------------
-// Test Utility — makeRequest
+// Suppress server.js listen errors
 // ---------------------------------------------------------------------------
-/**
- * Creates a temporary HTTP server from the Express app, sends a single
- * request to the specified path, then closes the server.  Port 0 lets
- * the OS assign an available port so tests never collide.
- *
- * @param {object} app      Express application instance
- * @param {string} path     URL path (e.g. '/', '/health')
- * @param {object} [opts]   Request options
- * @param {string} [opts.method='GET']  HTTP method
- * @param {object} [opts.headers={}]    Request headers
- * @param {string} [opts.body]          Request body
- * @returns {Promise<{statusCode:number, headers:object, body:string}>}
- */
-function makeRequest(app, path, opts) {
-  var options = opts || {};
-  return new Promise(function (resolve, reject) {
-    var server = http.createServer(app);
-    server.listen(0, function () {
-      var port = server.address().port;
-      var reqOptions = {
-        hostname: 'localhost',
-        port: port,
-        path: path,
-        method: options.method || 'GET',
-        headers: options.headers || {},
-      };
-      var req = http.request(reqOptions, function (res) {
-        var body = '';
-        res.on('data', function (chunk) { body += chunk; });
-        res.on('end', function () {
-          server.close();
-          resolve({ statusCode: res.statusCode, headers: res.headers, body: body });
-        });
-      });
-      req.on('error', function (err) { server.close(); reject(err); });
-      if (options.body) { req.write(options.body); }
-      req.end();
-    });
+// When server.js is required, httpServer.listen() fires on the configured port.
+// If that port is occupied, the error would cause the process to exit before
+// tests run. This handler suppresses such errors since tests create their own
+// temporary servers on port 0.
+if (httpServer && typeof httpServer.on === 'function') {
+  httpServer.on('error', function () {
+    // Silently ignore — tests use independent temporary servers
   });
 }
 
@@ -92,10 +62,10 @@ function makeRequest(app, path, opts) {
  */
 function singleRequest(port, path) {
   return new Promise(function (resolve, reject) {
-    var req = http.request(
+    const req = http.request(
       { hostname: 'localhost', port: port, path: path, method: 'GET' },
       function (res) {
-        var body = '';
+        let body = '';
         res.on('data', function (chunk) { body += chunk; });
         res.on('end', function () {
           resolve({ statusCode: res.statusCode, headers: res.headers, body: body });
@@ -115,8 +85,8 @@ function singleRequest(port, path) {
  * Exit code 1 on any failure, 0 on all-pass (CI-friendly).
  */
 async function runTests() {
-  var passed = 0;
-  var failed = 0;
+  let passed = 0;
+  let failed = 0;
 
   /** Wraps a single test with pass/fail logging. */
   async function test(name, fn) {
@@ -138,13 +108,13 @@ async function runTests() {
   // =====================================================================
   // Pre-fetch common responses (each counts toward the shared rate limiter)
   // =====================================================================
-  var mainResponse = await makeRequest(app, '/');
+  const mainResponse = await makeRequest(app, '/');
 
-  var corsEvilResponse = await makeRequest(app, '/', {
+  const corsEvilResponse = await makeRequest(app, '/', {
     headers: { 'Origin': 'http://evil.com' },
   });
 
-  var corsPreflightResponse = await makeRequest(app, '/', {
+  const corsPreflightResponse = await makeRequest(app, '/', {
     method: 'OPTIONS',
     headers: {
       'Origin': 'http://localhost:3000',
@@ -152,13 +122,13 @@ async function runTests() {
     },
   });
 
-  var notFoundResponse = await makeRequest(app, '/nonexistent-route');
+  const notFoundResponse = await makeRequest(app, '/nonexistent-route');
 
   // Pre-fetch a production-mode 404 (must happen before rate limit is
   // exhausted so the request isn't rejected with 429).
-  var origNodeEnv = process.env.NODE_ENV;
+  const origNodeEnv = process.env.NODE_ENV;
   process.env.NODE_ENV = 'production';
-  var productionNotFoundResponse = await makeRequest(app, '/nonexistent-production');
+  const productionNotFoundResponse = await makeRequest(app, '/nonexistent-production');
   if (origNodeEnv === undefined) {
     delete process.env.NODE_ENV;
   } else {
@@ -170,13 +140,13 @@ async function runTests() {
   // =====================================================================
 
   await test('Helmet: Content-Security-Policy header is present', async function () {
-    var csp = mainResponse.headers['content-security-policy'];
+    const csp = mainResponse.headers['content-security-policy'];
     assert.ok(csp, 'Content-Security-Policy header is missing');
     assert.ok(csp.includes("default-src 'self'"), 'CSP missing default-src self');
   });
 
   await test('Helmet: Strict-Transport-Security header is present', async function () {
-    var hsts = mainResponse.headers['strict-transport-security'];
+    const hsts = mainResponse.headers['strict-transport-security'];
     assert.ok(hsts, 'Strict-Transport-Security header is missing');
     assert.ok(hsts.includes('max-age'), 'HSTS missing max-age directive');
   });
@@ -234,8 +204,8 @@ async function runTests() {
   // =====================================================================
 
   await test('CORS: Requests from non-allowed origins do NOT receive CORS headers', async function () {
-    var acao = corsEvilResponse.headers['access-control-allow-origin'];
-    assert.notStrictEqual(acao, 'http://evil.com', 'Evil origin must not be allowed');
+    const acao = corsEvilResponse.headers['access-control-allow-origin'];
+    assert.strictEqual(acao, undefined, 'Non-allowed origin should not receive CORS header');
   });
 
   await test('CORS: Preflight OPTIONS requests are handled', async function () {
@@ -245,7 +215,7 @@ async function runTests() {
 
   await test('CORS: Vary header is present', async function () {
     // cors middleware sets Vary: Origin when origin is evaluated dynamically
-    var vary = corsEvilResponse.headers['vary'] || '';
+    const vary = corsEvilResponse.headers['vary'] || '';
     assert.ok(vary.indexOf('Origin') !== -1, 'Vary header should include Origin');
   });
 
@@ -258,7 +228,7 @@ async function runTests() {
   });
 
   await test('Rate Limiting: Response includes RateLimit header', async function () {
-    var hasHeader =
+    const hasHeader =
       mainResponse.headers['ratelimit'] !== undefined ||
       mainResponse.headers['ratelimit-limit'] !== undefined ||
       mainResponse.headers['ratelimit-policy'] !== undefined;
@@ -267,15 +237,15 @@ async function runTests() {
 
   await test('Rate Limiting: Excessive requests return 429', async function () {
     // Create a dedicated server and send rapid sequential requests until 429
-    var server = http.createServer(app);
+    const server = http.createServer(app);
     await new Promise(function (resolve) { server.listen(0, resolve); });
-    var port = server.address().port;
-    var got429 = false;
-    var lastBody = '';
-    var maxAttempts = config.rateLimit.max + 5;
+    const port = server.address().port;
+    let got429 = false;
+    let lastBody = '';
+    const maxAttempts = config.rateLimit.max + 5;
 
-    for (var i = 0; i < maxAttempts && !got429; i++) {
-      var response = await singleRequest(port, '/');
+    for (let i = 0; i < maxAttempts && !got429; i++) {
+      const response = await singleRequest(port, '/');
       if (response.statusCode === 429) {
         got429 = true;
         lastBody = response.body;
@@ -285,7 +255,7 @@ async function runTests() {
     server.close();
     assert.ok(got429, 'Expected 429 after exceeding rate limit of ' + config.rateLimit.max);
 
-    var parsed = JSON.parse(lastBody);
+    const parsed = JSON.parse(lastBody);
     assert.strictEqual(parsed.error.status, 429);
     assert.ok(typeof parsed.error.message === 'string', 'Error message should be a string');
   });
@@ -303,7 +273,7 @@ async function runTests() {
 
   await test('Validation: Error responses have structured format', async function () {
     // Use the pre-fetched 404 response as a proxy for structured error format
-    var parsed = JSON.parse(notFoundResponse.body);
+    const parsed = JSON.parse(notFoundResponse.body);
     assert.ok(parsed.error, 'Response should have an error property');
     assert.strictEqual(typeof parsed.error.status, 'number', 'error.status must be a number');
     assert.strictEqual(typeof parsed.error.message, 'string', 'error.message must be a string');
@@ -326,21 +296,21 @@ async function runTests() {
 
   await test('Error Handling: Unknown routes return 404', async function () {
     assert.strictEqual(notFoundResponse.statusCode, 404, 'Expected 404 for unknown route');
-    var ct = notFoundResponse.headers['content-type'] || '';
+    const ct = notFoundResponse.headers['content-type'] || '';
     assert.ok(ct.indexOf('application/json') !== -1, 'Expected JSON content-type');
-    var parsed = JSON.parse(notFoundResponse.body);
+    const parsed = JSON.parse(notFoundResponse.body);
     assert.strictEqual(parsed.error.status, 404);
     assert.strictEqual(parsed.error.message, 'Not Found');
   });
 
   await test('Error Handling: No stack trace leakage in production', async function () {
-    var parsed = JSON.parse(productionNotFoundResponse.body);
+    const parsed = JSON.parse(productionNotFoundResponse.body);
     assert.strictEqual(parsed.error.stack, undefined,
       'Stack trace must not be present in production');
   });
 
   await test('Error Handling: Structured error response format', async function () {
-    var parsed = JSON.parse(notFoundResponse.body);
+    const parsed = JSON.parse(notFoundResponse.body);
     assert.ok(typeof parsed === 'object', 'Body should be an object');
     assert.ok(typeof parsed.error === 'object', 'Should have error object');
     assert.strictEqual(typeof parsed.error.status, 'number', 'error.status must be a number');
@@ -348,11 +318,24 @@ async function runTests() {
   });
 
   // =====================================================================
-  //  Results
+  //  Results and Cleanup
   // =====================================================================
   console.log('');
   console.log('Results: ' + passed + ' passed, ' + failed + ' failed, ' + (passed + failed) + ' total');
-  process.exit(failed > 0 ? 1 : 0);
+
+  // Clean up the HTTP server started by requiring server.js to prevent
+  // the Node.js process from hanging on open handles.
+  try {
+    if (httpServer && typeof httpServer.close === 'function') {
+      httpServer.close();
+    }
+  } catch (cleanupErr) {
+    // Ignore cleanup errors — server may not have started successfully
+  }
+
+  if (failed > 0) {
+    process.exit(1);
+  }
 }
 
 // ---------------------------------------------------------------------------
