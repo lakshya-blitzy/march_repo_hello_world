@@ -67,6 +67,33 @@ def hello_world(path):
     return response
 
 
+@app.errorhandler(405)
+def handle_method_not_allowed(error):
+    """
+    Error handler for 405 Method Not Allowed responses.
+
+    The original Node.js http.createServer() handler is completely method-agnostic —
+    it accepts ANY HTTP method (standard or non-standard) and responds identically.
+    Flask's route decorators only match methods explicitly listed in the 'methods'
+    parameter, returning 405 for unlisted methods such as TRACE, CONNECT, PROPFIND,
+    MKCOL, or any custom method name.
+
+    This error handler intercepts those 405 responses and returns the same "Hello, World!"
+    response with 200 OK status, ensuring universal method acceptance that mirrors the
+    original Node.js behavior.
+
+    Args:
+        error: The Werkzeug MethodNotAllowed exception instance.
+
+    Returns:
+        A Flask Response object with status 200, Content-Type text/plain,
+        and body "Hello, World!\\n" (14 bytes including trailing newline).
+    """
+    response = make_response('Hello, World!\n', 200)
+    response.headers['Content-Type'] = 'text/plain'
+    return response
+
+
 # Entry point guard — ensures app.run() only executes when the file is run directly.
 # This allows the module to be imported by WSGI servers (e.g., Gunicorn) without
 # automatically starting the development server.
