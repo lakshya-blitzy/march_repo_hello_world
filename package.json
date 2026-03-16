@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "echo \"Error: no test runner configured\" && exit 1"
+    "test": "node tests/integration/routes.test.js && node tests/security/security.test.js"
   },
   "keywords": [
     "security",
