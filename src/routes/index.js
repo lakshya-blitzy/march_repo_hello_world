@@ -7,7 +7,6 @@
  */
 
 const { Router } = require('express');
-const { handleValidationErrors, sanitizeInput } = require('../middleware/validator');
 
 const router = Router();
 

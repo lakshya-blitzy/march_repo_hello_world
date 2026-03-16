@@ -59,7 +59,7 @@ const corsMiddleware = cors(corsOptions);
 // X-RateLimit-* headers are disabled. Uses the built-in memory store.
 const rateLimiter = rateLimit({
   windowMs: config.rateLimit.windowMs,
-  max: config.rateLimit.max,
+  limit: config.rateLimit.max,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   message: {

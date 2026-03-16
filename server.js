@@ -33,7 +33,6 @@ const express = require('express');
 const https = require('https');
 const http = require('http');
 const fs = require('fs');
-const path = require('path');
 
 // ---------------------------------------------------------------------------
 // Internal Imports — Application modules
