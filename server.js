@@ -4,19 +4,12 @@
  * @description
  * Minimal HTTP server built on the Node.js built-in `http` module (no third-party
  * dependencies). It binds the loopback interface 127.0.0.1 on port 3000 and replies
- * to every request the handler receives — regardless of path, headers, or body, and
- * for every standard HTTP method — with the same static plain-text response (a
- * "catch-all" response).
+ * to every request the handler receives — regardless of method, path, headers, or
+ * body — with the same static plain-text response (a "catch-all" response).
  *
- * Response contract: `200 OK`, `Content-Type: text/plain`, `Content-Length: 14`,
- * body `Hello, World!\n`. `Content-Length` is set explicitly so it is also reported
- * on `HEAD` responses, which carry the same status and headers but no body (per HTTP
- * semantics).
- *
- * Method boundary: a request reaches the handler only after Node's built-in HTTP
- * parser accepts the request line. A request that uses an unrecognized method token
- * (for example `FOO`) is rejected by the parser with `400 Bad Request` before the
- * handler runs.
+ * Response contract: `200 OK`, `Content-Type: text/plain`, body `Hello, World!\n`.
+ * Node derives `Content-Length` (14 bytes) automatically from the response body for
+ * body-bearing methods (GET, POST, …).
  *
  * Run with: `node server.js`  (no dependency install and no build step required).
  * On startup it logs: `Server running at http://127.0.0.1:3000/`.
@@ -42,14 +35,9 @@ const port = 3000;
 /**
  * HTTP request handler (the `http.createServer` request listener).
  *
- * Responds identically to every request it receives: the method, URL/path, headers,
- * and body are all ignored, and the handler returns the same catch-all response —
- * HTTP 200 with `Content-Type: text/plain`, an explicit `Content-Length: 14`, and a
- * body of `Hello, World!\n`. Setting `Content-Length` explicitly ensures it is also
- * present on `HEAD` responses (which send the headers only, no body).
- *
- * Only requests that Node's HTTP parser accepts reach this handler; an unrecognized
- * method token is rejected upstream with `400 Bad Request` (see the module header).
+ * Responds identically to every request: the method, URL/path, headers, and body
+ * are all ignored (catch-all behavior). Always returns HTTP 200 with a
+ * `text/plain` body of `Hello, World!\n`.
  *
  * @param {http.IncomingMessage} req - The incoming request. Accepted to satisfy the
  *   callback signature but intentionally unused (no inspection or branching).
@@ -59,9 +47,6 @@ const port = 3000;
 const server = http.createServer((req, res) => {
   res.statusCode = 200;                               // Always 200 OK
   res.setHeader('Content-Type', 'text/plain');        // Plain-text response
-  // Set Content-Length explicitly (the byte length of the body) so it is reported on
-  // HEAD responses too — not only on body-bearing methods such as GET and POST.
-  res.setHeader('Content-Length', Buffer.byteLength('Hello, World!\n'));
   res.end('Hello, World!\n');                         // Fixed response body
 });
 
