@@ -34,8 +34,8 @@ const port = 3000;
  * HTTP request handler (the `http.createServer` request listener).
  *
  * Responds identically to every request: the method, URL/path, headers, and body
- * are all ignored (catch-all behavior). Always returns HTTP 200 with a
- * `text/plain` body of `Hello, World!\n`.
+ * are all ignored, and the handler returns the same catch-all response — HTTP 200
+ * with a `text/plain` body of `Hello, World!\n`.
  *
  * @param {http.IncomingMessage} req - The incoming request. Accepted to satisfy the
  *   callback signature but intentionally unused (no inspection or branching).
@@ -51,7 +51,7 @@ const server = http.createServer((req, res) => {
 /**
  * Binds the server to `hostname:port` and starts listening.
  *
- * The listener callback runs once, when the server is ready, and logs the
+ * The startup callback runs once, when the server is ready, and logs the
  * running URL to stdout: `Server running at http://127.0.0.1:3000/`.
  */
 server.listen(port, hostname, () => {
