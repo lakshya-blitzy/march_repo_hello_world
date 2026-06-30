@@ -1,6 +1,6 @@
 # march_repo_hello_world
 
-A minimal Node.js HTTP server that returns a static `Hello, World!` plain-text response to every request.
+A minimal Node.js HTTP server that returns a static `Hello, World!` plain-text response to every request. `Source: server.js:L1, L6-L10`
 
 ---
 
@@ -24,10 +24,10 @@ A minimal Node.js HTTP server that returns a static `Hello, World!` plain-text r
 `march_repo_hello_world` is a single-file HTTP service built entirely on the Node.js built-in
 [`http`](https://nodejs.org/api/http.html) module. It starts a web server that listens on the
 loopback interface and answers **every** incoming request — regardless of HTTP method, URL path,
-headers, or body — with the same fixed plain-text response, `Hello, World!`.
+headers, or body — with the same fixed plain-text response, `Hello, World!`. `Source: server.js:L1, L3, L6-L10`
 
 It is intentionally minimal: there is no framework, no router, no configuration layer, and no
-third-party dependency. The complete program lives in a single file, `server.js`.
+third-party dependency. The complete program lives in a single file, `server.js`. `Source: server.js:L1; repository root inventory`
 
 ### Features
 
@@ -35,19 +35,20 @@ third-party dependency. The complete program lives in a single file, `server.js`
 - **Loopback binding** — listens on `127.0.0.1:3000` (the local machine only). `Source: server.js:L3-L4`
 - **Catch-all response** — any method on any path returns the identical response. `Source: server.js:L6-L10`
 - **Startup log** — prints the running URL to stdout once the listener is ready. `Source: server.js:L12-L14`
-- **No build step** — run the source directly with `node server.js`.
+- **No build step** — run the source directly with `node server.js`. `Source: repository root inventory`
 
 ---
 
 ## Prerequisites
 
-- A **Node.js runtime** on an active LTS line (for example **18**, **20**, or **22**). Node.js
-  ships with the built-in `http` module this server uses, so no additional runtime components are
-  required.
+- A **Node.js runtime** on any currently supported (non-EOL) LTS line — for example **v22**
+  (Maintenance LTS) or **v24** (Active LTS) as of June 2026. Node.js ships with the built-in `http`
+  module this server uses, so no additional runtime components are required. `Source: server.js:L1`
 - **No other tooling is required** — there is no bundler, transpiler, or package-manager step.
+  `Source: repository root inventory`
 
-> Local verification for this documentation used **Node.js v20.x** with **npm 11.x**, but any
-> active LTS line works. `npm` is **not** used by this project (see [Setup / Installation](#setup--installation)).
+> This documentation's examples were verified locally on **Node.js v20.x** with **npm 11.x**. Use
+> any **currently supported (non-EOL) LTS** release; `npm` is **not** used by this project (see [Setup / Installation](#setup--installation)).
 
 ---
 
@@ -65,7 +66,7 @@ cd march_repo_hello_world
 > `package.json` and no lockfile. `Source: server.js:L1`
 
 Once the runtime is installed and the code is cloned, the server is ready to run — there is nothing
-else to fetch or compile.
+else to fetch or compile. `Source: repository root inventory`
 
 ---
 
@@ -84,7 +85,7 @@ exactly (`Source: server.js:L12-L14`):
 Server running at http://127.0.0.1:3000/
 ```
 
-The process stays in the foreground and keeps listening until you stop it (press `Ctrl+C`).
+The process stays in the foreground and keeps listening until you stop it (press `Ctrl+C`). `Source: server.js:L12-L14`
 
 ---
 
@@ -158,8 +159,8 @@ sequenceDiagram
 
 ## Deployment Guide
 
-This project has **no build step** and **no dependency installation** — deployment is simply running
-the source file with Node.js:
+This project has **no build step** and **no dependency installation**, so deployment is simply
+running the source file with Node.js. `Source: repository root inventory`
 
 ```bash
 node server.js
@@ -184,8 +185,9 @@ are **not** required by this project and are **not** performed here):
 
 ## Code Explanation
 
-The entire program is `server.js`. The walkthrough below narrates it block by block; the line
-numbers refer to the executable source statements (`server.js` is 15 lines, including blank lines).
+The entire program is `server.js`. The walkthrough below narrates it block by block; the bracketed
+line numbers (`[L1]` through `[L14]`) refer to the executable source statements shown in the code
+block below. `Source: server.js:L1-L14`
 
 ```javascript
 const http = require('http');                          // [L1]
@@ -231,7 +233,7 @@ request handler, and the startup logger — and the one-time startup log. `Sourc
 graph LR
     A[Client] -->|request| B[HTTP Listener<br/>server.listen :3000]
     B --> C[Request Handler<br/>createServer callback]
-    C -->|200 / text-plain<br/>Hello, World!| A
+    C -->|200 / text/plain<br/>Hello, World!| A
     B -.startup.-> D[Startup Logger<br/>console.log URL]
 ```
 
@@ -239,7 +241,7 @@ graph LR
 
 ## Project Structure
 
-The repository contains exactly two files:
+The repository contains exactly two files (`Source: repository root inventory`):
 
 ```text
 .
@@ -248,15 +250,15 @@ The repository contains exactly two files:
 ```
 
 There is **no** `package.json`, **no** lockfile (`package-lock.json` / `yarn.lock` /
-`pnpm-lock.yaml`), and **no** `docs/` directory. The configuration surface is **none**: the server
-reads no environment variables, no CLI arguments, and no configuration file — `hostname` and `port`
-are hardcoded constants. `Source: server.js:L3-L4`
+`pnpm-lock.yaml`), and **no** `docs/` directory. `Source: repository root inventory` The
+configuration surface is **none**: the server reads no environment variables, no CLI arguments, and
+no configuration file — `hostname` and `port` are hardcoded constants. `Source: server.js:L3-L4`
 
 ## Notes
 
 - **No `LICENSE` file** is present in the repository, and none is created by this documentation. If
-  you intend to distribute this project, consider adding a license of your choice.
-- **No test suite** and **no build step** exist — the source runs directly under Node.js.
+  you intend to distribute this project, consider adding a license of your choice. `Source: repository root inventory`
+- **No test suite** and **no build step** exist — the source runs directly under Node.js. `Source: repository root inventory`
 - **Title vs. repository name.** This README's title is `march_repo_hello_world`, which documents the
   project as-is. It may differ cosmetically from the hosting repository's name; that difference is
   intentional and no name is invented here.
