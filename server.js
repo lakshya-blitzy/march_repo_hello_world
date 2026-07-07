@@ -16,7 +16,24 @@
  */
 
 // Node.js built-in HTTP module — the only dependency (ships with Node.js).
-const http = require('http');
+const hostname = '127.0.0.1';
+
+/**
+ * The TCP port the server listens on.
+ * @constant {number}
+ */
+const port = 3000;
+
+/**
+ * HTTP request handler (the `http.createServer` request listener).
+ *
+ * Responds identically to every request: the method, URL/path, headers, and body
+ * are all ignored (catch-all behavior). Always returns HTTP 200 with a
+ * `text/plain` body of `Hello, World!\n`.
+ *
+ * @param {http.IncomingMessage} req - The incoming request. Accepted to satisfy the
+ *   callback signature but intentionally unused (no inspection or branching).
+ * @param {http.ServerResponse} res - The response object us
 
 const hostname = '127.0.0.1';
 const port = 3000;
